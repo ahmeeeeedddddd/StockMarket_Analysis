@@ -1,0 +1,84 @@
+# infrastructure/kafka/topics.yml
+#
+# Declarative definition of every Kafka topic used by the stock-analytics
+# pipeline.  kafka_setup.py reads this file and creates / verifies all topics
+# at startup so the rest of the team never has to touch kafka-topics.sh.
+#
+# Fields per topic
+# ----------------
+# name          : exact topic name (must match shared/constants.py Topics enum)
+# partitions    : parallelism — one partition per tracked symbol is a good rule
+#                 of thumb for ordered-per-symbol processing
+# replication   : set to 1 for a single-broker dev cluster; bump to 3 in prod
+# retention_ms  : how long Kafka keeps messages (-1 = forever)
+# retention_bytes: max bytes per partition (-1 = unlimited)
+# cleanup_policy: "delete" (time/size) | "compact" (keep latest per key)
+# segment_ms    : roll a new log segment every N ms (affects compaction speed)
+# description   : human-readable purpose — shown in init_all.py output
+
+topics:
+
+  # ---------------------------------------------------------------------------
+  # ticks
+  # Raw trade ticks published by Person 1 (ingestion/).
+  # Key   = symbol (e.g. "AAPL") — guarantees per-symbol ordering.
+  # Value = shared.schema.TickEvent serialised as UTF-8 JSON.
+  #
+  # Consumers:
+  #   - processing-group        (Person 3)
+  #   - anomaly-detection-group (Person 4)
+  # ---------------------------------------------------------------------------
+  - name: ticks
+    partitions: 6          # one partition per tracked symbol (AAPL MSFT GOOGL AMZN TSLA NVDA)
+    replication: 1
+    retention_ms: 86400000  # 24 h — raw ticks are expensive to keep forever
+    retention_bytes: -1
+    cleanup_policy: delete
+    segment_ms: 3600000     # 1 h segments
+    description: >
+      Raw tick events from yfinance/Polygon.  One message per price update.
+      Keyed by symbol for deterministic partition assignment.
+
+  # ---------------------------------------------------------------------------
+  # aggregates
+  # OHLCV/VWAP candles published by Person 3 (processing/spark_job.py).
+  # Key   = "<symbol>:<window_sec>" (e.g. "AAPL:60").
+  # Value = shared.schema.AggregateEvent serialised as UTF-8 JSON.
+  #
+  # Consumers:
+  #   - anomaly-detection-group (Person 4)
+  #   - dashboard/ reads TimescaleDB directly, but Person 4 also re-publishes
+  #     to this topic after enrichment
+  # ---------------------------------------------------------------------------
+  - name: aggregates
+    partitions: 6
+    replication: 1
+    retention_ms: 604800000  # 7 days — useful for replaying short historical windows
+    retention_bytes: -1
+    cleanup_policy: delete
+    segment_ms: 3600000
+    description: >
+      Completed OHLCV candlesticks and VWAP aggregates per symbol per window
+      (1 min, 5 min, 15 min).  Published by the Spark streaming job.
+
+  # ---------------------------------------------------------------------------
+  # alerts
+  # Anomaly alerts published by Person 4 (anomaly_detection/alert_publisher.py).
+  # Key   = symbol.
+  # Value = shared.schema.AlertEvent serialised as UTF-8 JSON.
+  #
+  # Consumers:
+  #   - alerts-group (Person 5) — writes history, sends notifications
+  #   - dashboard/   reads TimescaleDB for history, but may also consume live
+  # ---------------------------------------------------------------------------
+  - name: alerts
+    partitions: 6
+    replication: 1
+    retention_ms: 2592000000  # 30 days — alerts are small and audit-critical
+    retention_bytes: -1
+    cleanup_policy: delete
+    segment_ms: 3600000
+    description: >
+      Anomaly alerts (Bollinger breach, Z-score volume spike, price jump).
+      Consumed by the notification service and written to TimescaleDB for
+      dashboard history queries.
