@@ -16,11 +16,9 @@ from shared.kafka_config import KAFKA_CONFIG
 
 
 # ---------------------------------------------------------------------------
-# API credentials  (set these in your shell or .env before running)
+# API credentials
 # ---------------------------------------------------------------------------
-
-POLYGON_API_KEY: str = os.getenv("POLYGON_API_KEY", "")
-ALPHA_VANTAGE_API_KEY: str = os.getenv("ALPHA_VANTAGE_API_KEY", "")
+# `yfinance` does not require API keys for its public endpoints.
 
 
 # ---------------------------------------------------------------------------
@@ -31,32 +29,11 @@ TRACKED_SYMBOLS: List[str] = SYMBOLS   # defined once in shared/constants.py
 
 
 # ---------------------------------------------------------------------------
-# Polygon WebSocket
+# YFinance
 # ---------------------------------------------------------------------------
 
-POLYGON_WS_URL: str = "wss://socket.polygon.io/stocks"
-
-# How long to wait (seconds) before attempting a reconnect
-POLYGON_RECONNECT_DELAY: float = 5.0
-
-# Maximum number of reconnect attempts before giving up (0 = infinite)
-POLYGON_MAX_RECONNECTS: int = 0
-
-
-# ---------------------------------------------------------------------------
-# Alpha Vantage REST
-# ---------------------------------------------------------------------------
-
-ALPHA_VANTAGE_BASE_URL: str = "https://www.alphavantage.co/query"
-
-# Polling interval in seconds between REST calls (free tier: 5 req / min)
-ALPHA_VANTAGE_POLL_INTERVAL: float = 15.0
-
-# Number of retries on HTTP errors before skipping a cycle
-ALPHA_VANTAGE_MAX_RETRIES: int = 3
-
-# Seconds between retry attempts
-ALPHA_VANTAGE_RETRY_DELAY: float = 2.0
+# Polling interval in seconds between data fetches
+YFINANCE_POLL_INTERVAL: float = 5.0
 
 
 # ---------------------------------------------------------------------------
