@@ -47,7 +47,7 @@ class KafkaConfig:
 
 KAFKA_CONFIG = KafkaConfig(
     # Broker — matches the container name in docker-compose.yml
-    bootstrap_servers="localhost:9092",
+    bootstrap_servers="127.0.0.1:9092",
 
     # Topics
     topic_ticks=Topics.TICKS.value,

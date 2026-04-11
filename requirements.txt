@@ -1,5 +1,10 @@
-# ingestion service dependencies
+# Ingestion
 kafka-python==2.0.2
 websocket-client==1.7.0
 requests==2.31.0
 python-dotenv==1.0.1
+
+# Infrastructure & Shared
+confluent-kafka==2.3.0
+psycopg2-binary==2.9.9
+pyyaml==6.0.1
