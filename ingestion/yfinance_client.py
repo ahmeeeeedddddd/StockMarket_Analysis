@@ -39,35 +39,40 @@ class YFinanceClient:
         self._running = False
 
     def _poll_all(self) -> None:
-        """Fetch fast_info for all tracked symbols and emit ticks."""
+        """Fetch latest bar for all tracked symbols and emit ticks."""
         for symbol in TRACKED_SYMBOLS:
             if not self._running:
                 break
             try:
-                ticker = yf.Ticker(symbol)
-                fast_info = ticker.fast_info
-                
-                # fast_info might be missing some fields for some symbols/times.
-                # using last_price as price and last_volume as volume.
-                price = getattr(fast_info, "last_price", None)
-                volume = getattr(fast_info, "last_volume", 0)
+                df = yf.download(
+                    tickers=symbol,
+                    period="1d",
+                    interval="1m",
+                    progress=False,
+                    auto_adjust=True,
+                )
 
-                # Ensure volume is an int, default to 0 if None
-                if volume is None:
-                    volume = 0
-                else:
-                    volume = int(volume)
+                if df.empty:
+                    logger.debug("YFinanceClient skipping %s: empty dataframe", symbol)
+                    continue
 
-                if price is not None and price > 0:
+                # Take the most recent completed bar
+                latest = df.iloc[-1]
+
+                price  = float(latest["Close"].iloc[0] if hasattr(latest["Close"], "iloc") else latest["Close"])
+                volume = int(latest["Volume"].iloc[0]  if hasattr(latest["Volume"], "iloc") else latest["Volume"])
+
+                if price > 0:
                     event = TickEvent(
                         event_id=str(uuid.uuid4()),
                         timestamp=time.time(),
                         symbol=symbol,
-                        price=float(price),
+                        price=price,
                         volume=volume,
                         source="yfinance",
                     )
                     self._on_tick(event)
+                    logger.info("Sent tick: symbol=%s price=%.4f", event.symbol, event.price)
                 else:
                     logger.debug("YFinanceClient skipping %s: invalid price %s", symbol, price)
 

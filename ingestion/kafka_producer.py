@@ -43,6 +43,7 @@ class TickKafkaProducer:
     def __init__(self) -> None:
         self._producer: KafkaProducer = KafkaProducer(
             bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+            api_version=(2, 5, 0),
             acks=KAFKA_PRODUCER_ACKS,
             retries=KAFKA_PRODUCER_RETRIES,
             linger_ms=KAFKA_LINGER_MS,
