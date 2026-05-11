@@ -44,7 +44,7 @@ def run():
             if tick is None:
                 continue
 
-            ticker    = tick["ticker"]
+            ticker    = tick["symbol"]
             price     = float(tick["price"])
             volume    = float(tick["volume"])
             timestamp = tick.get("timestamp", datetime.now(timezone.utc).isoformat())

@@ -5,8 +5,8 @@ import os
 from confluent_kafka import Consumer, KafkaError
 
 
-KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "localhost:9092")
-INPUT_TOPIC = "tick-metrics"
+KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "127.0.0.1:9092")
+INPUT_TOPIC = "ticks"
 CONSUMER_GROUP = "anomaly-detection-group"
 
 log = logging.getLogger("anomaly_detector.consumer")
@@ -52,7 +52,7 @@ def poll_tick(consumer: Consumer, timeout: float = 1.0) -> dict | None:
 
 def _is_valid(tick: dict) -> bool:
     return (
-        tick.get("ticker")
+        tick.get("symbol")
         and tick.get("price") is not None
         and tick.get("volume") is not None
     )

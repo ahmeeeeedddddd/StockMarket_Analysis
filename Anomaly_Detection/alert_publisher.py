@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 from confluent_kafka import Producer
 
 
-KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "localhost:9092")
-OUTPUT_TOPIC = "market-alerts"
+KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP", "127.0.0.1:9092")
+OUTPUT_TOPIC = "alerts"
 
 log = logging.getLogger("anomaly_detector.publisher")
 

@@ -42,7 +42,7 @@ def get_spark(app_name: str = "StreamProcessor") -> SparkSession:
 
 def read_tick_stream(
     spark: SparkSession,
-    kafka_bootstrap: str = "localhost:9092",
+    kafka_bootstrap: str = "127.0.0.1:9092",
     topic: str = "ticks",
     starting_offsets: str = "latest",
 ):
@@ -81,9 +81,9 @@ def read_tick_stream(
 
 def write_to_kafka(
     df,
-    kafka_bootstrap: str = "localhost:9092",
-    topic: str,
-    checkpoint_path: str,
+    kafka_bootstrap: str = "127.0.0.1:9092",
+    topic: str = None,
+    checkpoint_path: str = None,
     trigger_seconds: int = 5,
 ):
     """
@@ -102,11 +102,11 @@ def write_to_kafka(
 
 def write_to_timescale(
     df,
-    table: str,
-    jdbc_url: str = "jdbc:postgresql://localhost:5432/market",
+    table: str = None,
+    jdbc_url: str = "jdbc:postgresql://localhost:5433/stockmarket",
     db_user: str = "postgres",
     db_password: str = "postgres",
-    checkpoint_path: str,
+    checkpoint_path: str = None,
     trigger_seconds: int = 5,
 ):
     """

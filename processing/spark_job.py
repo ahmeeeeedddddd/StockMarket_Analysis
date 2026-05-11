@@ -38,9 +38,9 @@ log = logging.getLogger(__name__)
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Market data stream processor")
-    p.add_argument("--kafka-bootstrap", default="localhost:9092")
+    p.add_argument("--kafka-bootstrap", default="127.0.0.1:9092")
     p.add_argument("--tick-topic",      default="ticks")
-    p.add_argument("--jdbc-url",        default="jdbc:postgresql://localhost:5432/market")
+    p.add_argument("--jdbc-url",        default="jdbc:postgresql://localhost:5433/stockmarket")
     p.add_argument("--db-user",         default="postgres")
     p.add_argument("--db-password",     default="postgres")
     p.add_argument("--checkpoint-base", default="/tmp/checkpoints")
