@@ -2,13 +2,15 @@
 #
 # Person 5 — Alerting & notification engineer
 #
-# Sends alert notifications via SendGrid's Mail Send API.
+# Sends alert notifications via standard SMTP (e.g. Gmail).
 # Only fires for HIGH-severity alerts by default (configurable).
 #
 # Required environment variables
 # --------------------------------
-#   SENDGRID_API_KEY    — your SendGrid API key
-#   EMAIL_FROM          — verified sender address (e.g. alerts@yourapp.com)
+#   GMAIL_SMTP_HOST     — smtp.gmail.com
+#   GMAIL_SMTP_PORT     — 587
+#   GMAIL_SMTP_USER     — your Gmail address
+#   GMAIL_SMTP_PASS     — your Gmail App Password
 #   EMAIL_TO            — recipient address (comma-separated for multiple)
 #
 # Optional environment variables
@@ -16,18 +18,15 @@
 #   EMAIL_MIN_SEVERITY  — minimum severity to email (low | medium | high)
 #                         default: "high"
 
-import json
 import logging
 import os
-
-import requests
+import smtplib
+from email.message import EmailMessage
 
 from shared.constants import AlertSeverity
 from shared.schema import AlertEvent
 
 log = logging.getLogger(__name__)
-
-SENDGRID_MAIL_URL = "https://api.sendgrid.com/v3/mail/send"
 
 _SEVERITY_ORDER = {
     AlertSeverity.LOW.value:    0,
@@ -71,40 +70,43 @@ def _build_html_body(event: AlertEvent) -> str:
 """
 
 
-def _build_payload(event: AlertEvent, from_addr: str, to_addrs: list[str]) -> dict:
-    """Build the SendGrid v3 mail/send JSON payload."""
-    subject = (
-        f"[{event.severity.upper()}] Market Alert — {event.symbol} / {event.alert_type}"
-    )
-    return {
-        "personalizations": [
-            {"to": [{"email": addr.strip()} for addr in to_addrs]}
-        ],
-        "from":    {"email": from_addr},
-        "subject": subject,
-        "content": [
-            {"type": "text/html", "value": _build_html_body(event)},
-        ],
-    }
+def _build_email(event: AlertEvent, from_addr: str, to_addrs: list[str]) -> EmailMessage:
+    """Build the EmailMessage object for SMTP sending."""
+    msg = EmailMessage()
+    subject = f"[{event.severity.upper()}] Market Alert — {event.symbol} / {event.alert_type}"
+    
+    msg["Subject"] = subject
+    msg["From"] = from_addr
+    msg["To"] = ", ".join(to_addrs)
+    
+    html_content = _build_html_body(event)
+    msg.set_content(f"Market Alert: {subject}\n\n{event.message}") # Fallback text
+    msg.add_alternative(html_content, subtype='html')
+    
+    return msg
 
 
 def send_email_alert(event: AlertEvent) -> None:
     """
-    Send an email notification for *event* via SendGrid.
+    Send an email notification for *event* via SMTP.
 
-    Skips silently when:
-    - Any of ``SENDGRID_API_KEY``, ``EMAIL_FROM``, or ``EMAIL_TO`` is missing.
-    - The event severity is below ``EMAIL_MIN_SEVERITY`` (default: high).
-
-    Logs a warning (does **not** raise) on HTTP errors.
+    Skips silently when required SMTP env vars or EMAIL_TO are missing.
+    Logs a warning (does **not** raise) on SMTP errors.
     """
-    api_key   = os.environ.get("SENDGRID_API_KEY", "").strip()
-    from_addr = os.environ.get("EMAIL_FROM", "").strip()
+    smtp_host = os.environ.get("GMAIL_SMTP_HOST", "").strip()
+    smtp_port = os.environ.get("GMAIL_SMTP_PORT", "").strip()
+    smtp_user = os.environ.get("GMAIL_SMTP_USER", "").strip()
+    smtp_pass = os.environ.get("GMAIL_SMTP_PASS", "").strip()
     to_raw    = os.environ.get("EMAIL_TO", "").strip()
 
-    if not api_key or not from_addr or not to_raw:
-        log.debug("SendGrid env vars not fully set — skipping email notification")
+    if not smtp_host or not smtp_user or not smtp_pass or not to_raw:
+        log.debug("SMTP env vars not fully set — skipping email notification")
         return
+        
+    try:
+        port = int(smtp_port) if smtp_port else 587
+    except ValueError:
+        port = 587
 
     min_severity = os.environ.get(
         "EMAIL_MIN_SEVERITY", AlertSeverity.HIGH.value
@@ -120,30 +122,25 @@ def send_email_alert(event: AlertEvent) -> None:
         return
 
     to_addrs = [a for a in to_raw.split(",") if a.strip()]
-    payload  = _build_payload(event, from_addr, to_addrs)
-
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type":  "application/json",
-    }
+    msg = _build_email(event, smtp_user, to_addrs)
 
     try:
-        resp = requests.post(
-            SENDGRID_MAIL_URL,
-            data=json.dumps(payload),
-            headers=headers,
-            timeout=15,
-        )
-        resp.raise_for_status()
+        # Connect to SMTP server
+        server = smtplib.SMTP(smtp_host, port, timeout=15)
+        server.starttls()
+        server.login(smtp_user, smtp_pass)
+        
+        # Send
+        server.send_message(msg)
+        server.quit()
+        
         log.info(
             "Email sent | symbol=%s  type=%s  severity=%s  to=%s  event_id=%s",
             event.symbol, event.alert_type, event.severity,
             to_addrs, event.event_id,
         )
-    except requests.HTTPError as exc:
+    except Exception as exc:
         log.warning(
-            "SendGrid HTTP error %s for event_id=%s: %s",
-            exc.response.status_code, event.event_id, exc.response.text,
+            "SMTP email sending failed for event_id=%s: %s",
+            event.event_id, exc,
         )
-    except requests.RequestException as exc:
-        log.warning("Email request failed for event_id=%s: %s", event.event_id, exc)
