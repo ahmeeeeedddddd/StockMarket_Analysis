@@ -16,3 +16,7 @@ pandas==2.2.1
 
 # Processing (Stream)
 pyspark==3.5.0
+
+# Backend API
+fastapi==0.110.0
+uvicorn==0.29.0

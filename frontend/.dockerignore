@@ -1,0 +1,16 @@
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+
+# Environment variables
+.env
+.env.*
+*.env
+
+# Logs and OS files
+npm-debug.log
+.DS_Store
