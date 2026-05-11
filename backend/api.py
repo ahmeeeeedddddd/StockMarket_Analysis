@@ -10,7 +10,14 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 
-from dashboard.db_queries import get_latest_price, get_candlesticks, get_recent_alerts, get_heatmap_data, get_deep_dive_data
+from backend.db_queries import (
+    get_latest_price,
+    get_candlesticks,
+    get_recent_alerts,
+    get_heatmap_data,
+    get_deep_dive_data
+)
+
 
 app = FastAPI(title="StockPulse API")
 
