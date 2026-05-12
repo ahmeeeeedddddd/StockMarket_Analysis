@@ -15,7 +15,11 @@ from backend.db_queries import (
     get_candlesticks,
     get_recent_alerts,
     get_heatmap_data,
-    get_deep_dive_data
+    get_deep_dive_data,
+    get_alert_rules,
+    add_alert_rule,
+    delete_alert_rule,
+    get_system_health
 )
 
 
@@ -77,6 +81,42 @@ def api_get_deep_dive(symbol: str):
         data = get_deep_dive_data(symbol)
         if not data:
             raise HTTPException(status_code=404, detail="Symbol not found")
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/rules")
+def api_get_rules():
+    try:
+        return get_alert_rules()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/rules")
+def api_add_rule(rule: dict):
+    try:
+        rule_id = add_alert_rule(
+            rule['symbol'], 
+            rule['rule_type'], 
+            rule['threshold'], 
+            rule.get('window_sec', 60)
+        )
+        return {"id": rule_id, "status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/rules/{rule_id}")
+def api_delete_rule(rule_id: int):
+    try:
+        delete_alert_rule(rule_id)
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/health")
+def api_get_health():
+    try:
+        data = get_system_health()
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

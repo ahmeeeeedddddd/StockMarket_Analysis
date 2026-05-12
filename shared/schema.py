@@ -178,6 +178,7 @@ class AlertEvent(BaseEvent):
     zscore:          Optional[float] = None
     reference_value: Optional[float] = None
     window_sec:      Optional[int]   = None
+    metadata:        dict            = field(default_factory=dict)
 
     def __post_init__(self):
         super().__post_init__()

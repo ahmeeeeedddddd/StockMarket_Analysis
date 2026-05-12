@@ -66,27 +66,30 @@ def save_tick(data):
 
 def save_alert(data):
     sql = """
-        INSERT INTO alerts (time, symbol, alert_type, severity, message, trigger_price, event_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-        ON CONFLICT DO NOTHING
+    INSERT INTO alerts (time, symbol, alert_type, severity, message, trigger_price, event_id)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
+    ON CONFLICT (event_id, time) DO NOTHING
     """
-    ts_str = data.get("detected_at")
-    try:
-        ts_dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
-    except:
-        ts_dt = datetime.now(timezone.utc)
+    ts = data.get("timestamp")
+    if isinstance(ts, (int, float)):
+        ts_dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+    else:
+        # Fallback for ISO strings or missing
+        try:
+            ts_dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        except:
+            ts_dt = datetime.now(timezone.utc)
 
-    details = data.get("details", {})
     execute_write(sql, (
         ts_dt,
-        data.get("ticker"),
-        data.get("anomaly_type"),
+        data.get("symbol"),
+        data.get("alert_type"),
         data.get("severity"),
-        f"Anomaly detected: {data.get('anomaly_type')}",
-        float(details.get("price", 0)),
-        data.get("alert_id", "none")
+        data.get("message", "Anomaly detected"),
+        float(data.get("trigger_price", 0)),
+        data.get("event_id", "none")
     ))
-    log.info(f"Saved alert to DB: {data.get('ticker')} - {data.get('anomaly_type')}")
+    log.info(f"Saved alert to DB: {data.get('symbol')} - {data.get('alert_type')}")
 
 if __name__ == "__main__":
     run()

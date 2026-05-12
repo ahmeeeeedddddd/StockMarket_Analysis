@@ -7,6 +7,7 @@ import yfinance as yf
 
 from shared.schema import TickEvent
 from ingestion.config import TRACKED_SYMBOLS, YFINANCE_POLL_INTERVAL
+from shared.health_check import report_health
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,8 @@ class YFinanceClient:
     def __init__(self, on_tick: Callable[[TickEvent], None]) -> None:
         self._on_tick = on_tick
         self._running = False
+        self._msg_count = 0
+        self._last_report = time.time()
 
     def run_forever(self) -> None:
         """Main polling loop. Blocks until stop() is called."""
@@ -121,9 +124,21 @@ class YFinanceClient:
                         source="yfinance",
                     )
                     self._on_tick(event)
+                    self._msg_count += 1
                     logger.info("Sent tick: symbol=%s price=%.4f", event.symbol, event.price)
-                else:
-                    logger.debug("YFinanceClient skipping %s: invalid price %s", symbol, price)
-
             except Exception as e:
                 logger.error("YFinanceClient failed to fetch data for %s: %s", symbol, e)
+
+        # Report health every 10s after processing all symbols
+        now = time.time()
+        if now - self._last_report > 10:
+            mps = self._msg_count / (now - self._last_report) if (now - self._last_report) > 0 else 0
+            status = "running" if self._msg_count > 0 else "idle"
+            report_health("ingestion", status, {
+                "mps": round(mps, 2),
+                "total_processed": self._msg_count,
+                "symbols_tracked": len(TRACKED_SYMBOLS)
+            })
+            self._last_report = now
+            # Only reset msg_count if we successfully reported
+            self._msg_count = 0

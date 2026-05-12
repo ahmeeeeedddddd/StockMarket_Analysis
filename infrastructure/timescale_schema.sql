@@ -115,3 +115,26 @@ CREATE INDEX IF NOT EXISTS ix_ma_symbol_time ON moving_averages (symbol, time DE
 -- ============================================================================
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;
+
+-- ============================================================================
+-- 5. Alert Rules Table (User-defined thresholds)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS alert_rules (
+    id SERIAL PRIMARY KEY,
+    symbol VARCHAR(10) NOT NULL,
+    rule_type VARCHAR(50) NOT NULL,
+    threshold FLOAT NOT NULL,
+    window_sec INTEGER DEFAULT 60,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_triggered TIMESTAMPTZ
+);
+
+-- ============================================================================
+-- 6. System Health Table (Service heartbeats)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS system_health (
+    service_name VARCHAR(50) PRIMARY KEY,
+    last_heartbeat TIMESTAMPTZ DEFAULT NOW(),
+    status VARCHAR(20),
+    metrics JSONB
+);

@@ -48,6 +48,7 @@ def get_db_connection() -> PgConnection:
         user=DB_USER,
         password=DB_PASSWORD,
     )
+    conn.autocommit = True
     # Return dicts instead of tuples — rows["price"] instead of rows[0]
     conn.cursor_factory = psycopg2.extras.RealDictCursor
     return conn

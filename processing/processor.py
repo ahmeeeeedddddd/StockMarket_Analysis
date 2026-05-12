@@ -2,8 +2,10 @@ import json
 import logging
 import uuid
 from datetime import datetime, timezone, timedelta
+import time
 from confluent_kafka import Consumer, KafkaError
 from shared.db_client import execute_write
+from shared.health_check import report_health
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -18,6 +20,8 @@ class StreamProcessor:
         })
         self.windows = [60, 300, 900]  # 1m, 5m, 15m
         self.state = {}
+        self.msg_count = 0
+        self.last_report = time.time()
         
     def get_bucket_start(self, ts, window_sec):
         bucket_ts = int(ts) - (int(ts) % window_sec)
@@ -102,18 +106,19 @@ class StreamProcessor:
         
         try:
             while True:
+                # Report health every 10s even if no messages
+                now = time.time()
+                if now - self.last_report > 10:
+                    mps = self.msg_count / (now - self.last_report) if (now - self.last_report) > 0 else 0
+                    report_health("processor", "running", {
+                        "mps": round(mps, 2),
+                        "total_processed": self.msg_count
+                    })
+                    self.last_report = now
+                    self.msg_count = 0
+
                 msg = self.consumer.poll(1.0)
                 if msg is None: continue
-                if msg.error():
-                    if msg.error().code() != KafkaError._PARTITION_EOF:
-                        log.error(f"Kafka error: {msg.error()}")
-                    continue
-
-                try:
-                    tick = json.loads(msg.value().decode())
-                    self.process_tick(tick)
-                except Exception as e:
-                    log.error(f"Processing error: {e}")
 
         except KeyboardInterrupt:
             pass

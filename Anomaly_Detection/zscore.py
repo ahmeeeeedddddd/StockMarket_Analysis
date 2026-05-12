@@ -66,9 +66,9 @@ def check_price_jump(prices: list, price: float) -> dict | None:
 
 def _severity_z(z: float) -> str:
     if z > 5:
-        return "CRITICAL"
+        return "high"
     if z > 4:
-        return "HIGH"
+        return "high"
     if z > 3:
-        return "MEDIUM"
-    return "LOW"
+        return "medium"
+    return "low"

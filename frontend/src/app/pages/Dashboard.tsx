@@ -5,6 +5,7 @@ import { CandlestickChart } from '../components/CandlestickChart';
 import { VolumeChart } from '../components/VolumeChart';
 import { AlertsFeed } from '../components/AlertsFeed';
 import { HeatmapTimeline } from '../components/HeatmapTimeline';
+import { PipelineHealth } from '../components/PipelineHealth';
 import {
   fetchLatestPrice,
   fetchCandles,
@@ -14,7 +15,7 @@ import {
   Candle,
   Alert,
 } from '../utils/stockData';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Activity } from 'lucide-react';
 
 const STOCKS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META'];
 const TIMEFRAMES = [
@@ -152,14 +153,24 @@ export function Dashboard() {
           <div className="flex-1 rounded-lg border border-border bg-card p-4 overflow-hidden">
             <AlertsFeed alerts={alerts} />
           </div>
-
+          
           <Link
             to="/alerts"
-            className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card p-4 transition-all hover:border-primary"
+            className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card p-4 transition-all hover:border-primary flex-shrink-0"
           >
             <BarChart3 className="h-5 w-5" style={{ color: '#00D4FF' }} />
             <span className="font-mono" style={{ fontSize: '0.875rem', fontWeight: 600, color: '#E8EAF0' }}>
-              View All Alerts
+              View All Live Alerts
+            </span>
+          </Link>
+
+          <Link
+            to="/health"
+            className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card p-2 transition-all hover:border-primary flex-shrink-0 opacity-70 hover:opacity-100"
+          >
+            <Activity className="h-4 w-4" style={{ color: '#00D4FF' }} />
+            <span className="font-mono" style={{ fontSize: '0.75rem', fontWeight: 600, color: '#E8EAF0' }}>
+              System Health
             </span>
           </Link>
         </div>

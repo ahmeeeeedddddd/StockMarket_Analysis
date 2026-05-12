@@ -39,8 +39,11 @@ export function AlertsHistory() {
         </Link>
 
         <div className="mb-6">
-          <div className="font-mono mb-4" style={{ fontSize: '2rem', fontWeight: 600, color: '#E8EAF0' }}>
+          <div className="font-mono mb-4" style={{ fontSize: '2.25rem', fontWeight: 700, color: '#E8EAF0' }}>
             Alerts History
+            <span className="ml-4 font-normal" style={{ fontSize: '1rem', color: '#8B92A8' }}>
+              ({filteredAlerts.length} total)
+            </span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -54,8 +57,8 @@ export function AlertsHistory() {
             <select
               value={filterSymbol}
               onChange={(e) => setFilterSymbol(e.target.value)}
-              className="rounded border border-border bg-input-background px-3 py-2 font-mono"
-              style={{ fontSize: '0.875rem', color: '#E8EAF0' }}
+              className="rounded border border-border px-3 py-2 font-mono"
+              style={{ fontSize: '0.875rem', color: '#E8EAF0', backgroundColor: '#1A1F2E' }}
             >
               <option value="ALL">All Stocks</option>
               {STOCKS.map((symbol) => (
@@ -68,104 +71,80 @@ export function AlertsHistory() {
             <select
               value={filterSeverity}
               onChange={(e) => setFilterSeverity(e.target.value)}
-              className="rounded border border-border bg-input-background px-3 py-2 font-mono"
-              style={{ fontSize: '0.875rem', color: '#E8EAF0' }}
+              className="rounded border border-border px-3 py-2 font-mono"
+              style={{ fontSize: '0.875rem', color: '#E8EAF0', backgroundColor: '#1A1F2E' }}
             >
               <option value="ALL">All Severities</option>
-              <option value="WARNING">Warning</option>
-              <option value="CRITICAL">Critical</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
             </select>
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-card overflow-hidden">
+        <div className="rounded-lg border border-border overflow-hidden" style={{ backgroundColor: '#0D1117' }}>
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border" style={{ backgroundColor: '#1A1F2E' }}>
-                <th
-                  className="font-mono text-left py-3 px-4"
-                  style={{ fontSize: '0.875rem', fontWeight: 600, color: '#8B92A8' }}
-                >
-                  Time
-                </th>
-                <th
-                  className="font-mono text-left py-3 px-4"
-                  style={{ fontSize: '0.875rem', fontWeight: 600, color: '#8B92A8' }}
-                >
-                  Stock
-                </th>
-                <th
-                  className="font-mono text-left py-3 px-4"
-                  style={{ fontSize: '0.875rem', fontWeight: 600, color: '#8B92A8' }}
-                >
-                  Alert Type
-                </th>
-                <th
-                  className="font-mono text-left py-3 px-4"
-                  style={{ fontSize: '0.875rem', fontWeight: 600, color: '#8B92A8' }}
-                >
-                  Value
-                </th>
-                <th
-                  className="font-mono text-left py-3 px-4"
-                  style={{ fontSize: '0.875rem', fontWeight: 600, color: '#8B92A8' }}
-                >
-                  Severity
-                </th>
+              <tr className="border-b border-border" style={{ backgroundColor: '#161B22' }}>
+                <th className="font-mono text-left py-3 px-4" style={{ fontSize: '0.75rem', fontWeight: 700, color: '#8B92A8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Time</th>
+                <th className="font-mono text-left py-3 px-4" style={{ fontSize: '0.75rem', fontWeight: 700, color: '#8B92A8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stock</th>
+                <th className="font-mono text-left py-3 px-4" style={{ fontSize: '0.75rem', fontWeight: 700, color: '#8B92A8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Alert Type</th>
+                <th className="font-mono text-left py-3 px-4" style={{ fontSize: '0.75rem', fontWeight: 700, color: '#8B92A8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Message</th>
+                <th className="font-mono text-left py-3 px-4" style={{ fontSize: '0.75rem', fontWeight: 700, color: '#8B92A8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Severity</th>
               </tr>
             </thead>
             <tbody>
-              {filteredAlerts.map((alert, idx) => (
-                <tr
-                  key={`${alert.symbol}-${alert.time}-${idx}`}
-                  className="border-b border-border transition-colors hover:bg-secondary"
-                  style={{
-                    backgroundColor: alert.severity === 'CRITICAL' ? 'rgba(255, 59, 59, 0.05)' : 'transparent',
-                  }}
-                >
-                  <td
-                    className="font-mono tabular-nums py-3 px-4"
-                    style={{ fontSize: '0.875rem', color: '#E8EAF0' }}
-                  >
-                    {new Date(alert.time).toLocaleString()}
-                  </td>
-                  <td
-                    className="font-mono py-3 px-4"
-                    style={{ fontSize: '0.875rem', fontWeight: 600, color: '#E8EAF0' }}
-                  >
-                    {alert.symbol}
-                  </td>
-                  <td className="font-mono py-3 px-4" style={{ fontSize: '0.875rem', color: '#8B92A8' }}>
-                    {alert.alert_type}
-                  </td>
-                  <td
-                    className="font-mono tabular-nums py-3 px-4"
-                    style={{ fontSize: '0.875rem', color: '#E8EAF0' }}
-                  >
-                    {alert.message}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      {alert.severity === 'CRITICAL' ? (
-                        <AlertCircle className="h-4 w-4" style={{ color: '#FF3B3B' }} />
-                      ) : (
-                        <AlertTriangle className="h-4 w-4" style={{ color: '#FFC107' }} />
-                      )}
-                      <span
-                        className="font-mono px-2 py-0.5 rounded"
-                        style={{
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          backgroundColor: alert.severity === 'CRITICAL' ? '#FF3B3B' : '#FFC107',
-                          color: '#0A0E1A',
-                        }}
-                      >
-                        {alert.severity}
-                      </span>
-                    </div>
+              {filteredAlerts.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-20 text-center font-mono" style={{ color: '#484F58', fontStyle: 'italic' }}>
+                    No alerts found for the selected filters.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredAlerts.map((alert, idx) => (
+                  <tr
+                    key={`${alert.symbol}-${alert.time}-${idx}`}
+                    className="border-b border-border transition-colors hover:bg-[#21262D]"
+                  >
+                    <td className="font-mono py-3 px-4" style={{ fontSize: '0.875rem', color: '#C9D1D9' }}>
+                      {new Date(alert.time).toLocaleString()}
+                    </td>
+                    <td className="font-mono py-3 px-4 font-bold" style={{ fontSize: '0.875rem', color: '#F0F6FC' }}>
+                      {alert.symbol}
+                    </td>
+                    <td className="font-mono py-3 px-4" style={{ fontSize: '0.875rem', color: '#8B92A8' }}>
+                      {alert.alert_type}
+                    </td>
+                    <td className="font-mono py-3 px-4" style={{ fontSize: '0.875rem', color: '#8B92A8' }}>
+                      {alert.message}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        {alert.severity === 'high' ? (
+                          <AlertCircle className="h-4 w-4" style={{ color: '#F85149' }} />
+                        ) : (
+                          <AlertTriangle className="h-4 w-4" style={{ color: '#D29922' }} />
+                        )}
+                        <span
+                          className="font-mono px-2 py-0.5 rounded"
+                          style={{
+                            fontSize: '0.625rem',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            backgroundColor: alert.severity === 'high' ? 'rgba(248, 81, 73, 0.1)' : 
+                                            alert.severity === 'medium' ? 'rgba(210, 153, 34, 0.1)' : 
+                                            'rgba(63, 185, 80, 0.1)',
+                            color: alert.severity === 'high' ? '#F85149' : 
+                                   alert.severity === 'medium' ? '#D29922' : '#3FB950'
+                          }}
+                        >
+                          {alert.severity}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

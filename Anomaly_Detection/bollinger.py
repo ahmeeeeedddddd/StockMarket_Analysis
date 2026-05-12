@@ -40,10 +40,10 @@ def check_bollinger_breach(prices: list, price: float) -> dict | None:
 
 def _severity(outer: float, inner: float, std: float) -> str:
     if std == 0:
-        return "HIGH"
+        return "high"
     excess = (outer - inner) / std
     if excess > 2:
-        return "CRITICAL"
+        return "high"
     if excess > 1:
-        return "HIGH"
-    return "MEDIUM"
+        return "high"
+    return "medium"

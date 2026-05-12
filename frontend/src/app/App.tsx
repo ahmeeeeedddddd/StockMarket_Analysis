@@ -2,8 +2,9 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './pages/Dashboard';
 import { StockDetail } from './pages/StockDetail';
-import { AlertsHistory } from './pages/AlertsHistory';
+import Health from './pages/Health';
 import { DeepDive } from './pages/DeepDive';
+import CustomRules from './pages/CustomRules';
 
 export default function App() {
   return (
@@ -14,8 +15,9 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/stock/:symbol" element={<StockDetail />} />
-            <Route path="/alerts" element={<AlertsHistory />} />
+            <Route path="/health" element={<Health />} />
             <Route path="/deep-dive/:symbol" element={<DeepDive />} />
+            <Route path="/rules" element={<CustomRules />} />
           </Routes>
         </div>
       </div>

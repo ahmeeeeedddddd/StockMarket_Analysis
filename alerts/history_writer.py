@@ -27,7 +27,7 @@ INSERT INTO alerts (
     window_sec,
     event_id
 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (event_id, time) DO NOTHING;
 """
 
 
@@ -45,6 +45,11 @@ def write_alert(event: AlertEvent) -> None:
         whether to retry or dead-letter the message.
     """
     ts = datetime.fromtimestamp(event.timestamp, tz=timezone.utc)
+    
+    # Try to extract fields from metadata if missing on the main object
+    meta = event.metadata or {}
+    zscore = event.zscore or meta.get("z_score") or meta.get("std")
+    ref_val = event.reference_value or meta.get("upper_band") or meta.get("lower_band") or meta.get("rolling_mean_volume")
 
     params = (
         ts,
@@ -53,10 +58,10 @@ def write_alert(event: AlertEvent) -> None:
         event.severity,
         event.message,
         event.trigger_price,
-        event.trigger_volume,
-        event.zscore,
-        event.reference_value,
-        event.window_sec,
+        event.trigger_volume or meta.get("current_volume"),
+        zscore,
+        ref_val,
+        event.window_sec or meta.get("window_sec"),
         event.event_id,
     )
 

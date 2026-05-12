@@ -115,15 +115,18 @@ export function calculateEMA(candles: Candle[], period = 20): number[] {
 }
 
 export function isMarketOpen(): boolean {
-  const now = new Date();
-  const day = now.getDay();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
+  // Get time in New York
+  const nyTimeStr = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+  const nyDate = new Date(nyTimeStr);
+  
+  const day = nyDate.getDay();
+  const hours = nyDate.getHours();
+  const minutes = nyDate.getMinutes();
   const totalMinutes = hours * 60 + minutes;
 
   const isWeekday = day >= 1 && day <= 5;
-  const marketOpen = 9 * 60 + 30;
-  const marketClose = 16 * 60;
+  const marketOpen = 9 * 60 + 30; // 9:30 AM
+  const marketClose = 16 * 60;    // 4:00 PM
 
   return isWeekday && totalMinutes >= marketOpen && totalMinutes < marketClose;
 }

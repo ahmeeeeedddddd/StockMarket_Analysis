@@ -140,3 +140,27 @@ def get_deep_dive_data(symbol: str) -> dict:
         "candles": df.to_dict(orient='records'),
         "historical": historical
     }
+
+def get_alert_rules() -> list:
+    sql = "SELECT id, symbol, rule_type, threshold, window_sec FROM alert_rules ORDER BY created_at DESC"
+    rows = execute_query(sql)
+    return rows
+
+def add_alert_rule(symbol: str, rule_type: str, threshold: float, window_sec: int) -> int:
+    sql = """
+        INSERT INTO alert_rules (symbol, rule_type, threshold, window_sec)
+        VALUES (%s, %s, %s, %s)
+        RETURNING id
+    """
+    rows = execute_query(sql, (symbol, rule_type, threshold, window_sec))
+    return rows[0]['id'] if rows else None
+
+def delete_alert_rule(rule_id: int) -> bool:
+    sql = "DELETE FROM alert_rules WHERE id = %s"
+    execute_query(sql, (rule_id,))
+    return True
+
+def get_system_health() -> list:
+    sql = "SELECT service_name, last_heartbeat, status, metrics FROM system_health ORDER BY service_name ASC"
+    rows = execute_query(sql)
+    return rows

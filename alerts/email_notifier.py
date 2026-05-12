@@ -100,7 +100,8 @@ def send_email_alert(event: AlertEvent) -> None:
     to_raw    = os.environ.get("EMAIL_TO", "").strip()
 
     if not smtp_host or not smtp_user or not smtp_pass or not to_raw:
-        log.debug("SMTP env vars not fully set — skipping email notification")
+        log.warning("SMTP configuration is incomplete in .env! (HOST=%s, USER=%s, TO=%s)", 
+                    bool(smtp_host), bool(smtp_user), bool(to_raw))
         return
         
     try:
@@ -126,8 +127,12 @@ def send_email_alert(event: AlertEvent) -> None:
 
     try:
         # Connect to SMTP server
+        log.info("Connecting to SMTP server %s:%s...", smtp_host, port)
         server = smtplib.SMTP(smtp_host, port, timeout=15)
+        # server.set_debuglevel(1) # Uncomment for extreme raw SMTP logs in console
         server.starttls()
+        
+        log.info("Attempting SMTP login for %s...", smtp_user)
         server.login(smtp_user, smtp_pass)
         
         # Send
@@ -135,12 +140,15 @@ def send_email_alert(event: AlertEvent) -> None:
         server.quit()
         
         log.info(
-            "Email sent | symbol=%s  type=%s  severity=%s  to=%s  event_id=%s",
-            event.symbol, event.alert_type, event.severity,
-            to_addrs, event.event_id,
+            "SUCCESS: Email sent | symbol=%s  type=%s  to=%s",
+            event.symbol, event.alert_type, to_addrs
         )
+    except smtplib.SMTPAuthenticationError:
+        log.error("CRITICAL: SMTP Authentication failed. Check GMAIL_SMTP_USER and GMAIL_SMTP_PASS (App Password).")
+    except smtplib.SMTPConnectError:
+        log.error("CRITICAL: Could not connect to SMTP server. Check host/port and internet connection.")
     except Exception as exc:
-        log.warning(
-            "SMTP email sending failed for event_id=%s: %s",
+        log.error(
+            "ERROR: SMTP sending failed for event_id=%s: %s",
             event.event_id, exc,
         )
