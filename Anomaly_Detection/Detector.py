@@ -2,10 +2,10 @@ import logging
 from collections import defaultdict, deque
 from datetime import datetime, timezone
 
-from bollinger import BB_WINDOW, check_bollinger_breach
-from zscore import JUMP_WINDOW, VOL_WINDOW, check_price_jump, check_volume_spike
-from kafka_consumer import make_consumer, poll_tick
-from alert_publisher import build_alert, flush, make_producer, publish_alert
+from Anomaly_Detection.bollinger import BB_WINDOW, check_bollinger_breach
+from Anomaly_Detection.zscore import JUMP_WINDOW, VOL_WINDOW, check_price_jump, check_volume_spike
+from Anomaly_Detection.kafka_consumer import make_consumer, poll_tick
+from Anomaly_Detection.alert_publisher import build_alert, flush, make_producer, publish_alert
 
 
 logging.basicConfig(

@@ -3,16 +3,19 @@ services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
+    hostname: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
-
+    networks:
+      - stock-net
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
+    hostname: kafka
     depends_on:
       - zookeeper
     ports:
@@ -28,13 +31,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - stock-net
 
-  # ---------------------------------------------------------------------------
-  # TimescaleDB (Postgres + time-series extension)
-  # ---------------------------------------------------------------------------
   timescaledb:
     image: timescale/timescaledb:latest-pg15
     container_name: timescaledb
+    hostname: timescaledb
     ports:
       - "5433:5432"
     environment:
@@ -48,26 +51,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - stock-net
 
-  backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
-    container_name: backend
-    ports:
-      - "8000:8000"
-    depends_on:
-      - timescaledb
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: frontend
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
+networks:
+  stock-net:
+    driver: bridge
 
 volumes:
   timescaledb_data:

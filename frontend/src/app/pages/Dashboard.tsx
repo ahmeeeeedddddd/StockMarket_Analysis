@@ -16,7 +16,7 @@ import {
 } from '../utils/stockData';
 import { BarChart3 } from 'lucide-react';
 
-const STOCKS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA'];
+const STOCKS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META'];
 const TIMEFRAMES = [
   { label: '1m', interval: 60, count: 60 },
   { label: '5m', interval: 300, count: 60 },
@@ -92,7 +92,7 @@ export function Dashboard() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="grid grid-cols-6 gap-4 p-6">
+      <div className="grid grid-cols-7 gap-2 p-4">
         {STOCKS.map((symbol) => (
           <StockCard
             key={symbol}

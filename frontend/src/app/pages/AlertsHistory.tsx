@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { ArrowLeft, AlertTriangle, AlertCircle, Filter } from 'lucide-react';
 import { fetchAlerts, Alert } from '../utils/stockData';
 
-const STOCKS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA'];
+const STOCKS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA', 'META'];
 
 export function AlertsHistory() {
   const [alerts, setAlerts] = useState<Alert[]>([]);

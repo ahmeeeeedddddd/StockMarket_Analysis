@@ -24,14 +24,14 @@ export function StockCard({ stock, selected, onClick, flash }: StockCardProps) {
             }
           : {}
       }
-      className="rounded-lg border border-border p-4 transition-all cursor-pointer"
+      className="rounded-lg border border-border p-2 transition-all cursor-pointer"
       style={{
         backgroundColor: selected ? '#1A1F2E' : '#0D1117',
         borderColor: selected ? '#00D4FF' : 'rgba(255, 255, 255, 0.1)',
       }}
     >
       <div className="flex items-start justify-between mb-2">
-        <div className="font-mono" style={{ fontSize: '1.125rem', fontWeight: 600, color: '#E8EAF0' }}>
+        <div className="font-mono" style={{ fontSize: '1rem', fontWeight: 600, color: '#E8EAF0' }}>
           {stock.symbol}
         </div>
         {isPositive ? (
@@ -41,7 +41,7 @@ export function StockCard({ stock, selected, onClick, flash }: StockCardProps) {
         )}
       </div>
 
-      <div className="font-mono tabular-nums mb-1" style={{ fontSize: '1.5rem', fontWeight: 600, color: '#E8EAF0' }}>
+      <div className="font-mono tabular-nums mb-1" style={{ fontSize: '1.25rem', fontWeight: 600, color: '#E8EAF0' }}>
         ${stock.price.toFixed(2)}
       </div>
 

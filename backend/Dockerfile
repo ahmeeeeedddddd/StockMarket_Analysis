@@ -8,9 +8,8 @@ COPY backend/requirements.txt .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend, dashboard, and shared folders
+# Copy backend and shared folders
 COPY backend/ ./backend/
-COPY dashboard/ ./dashboard/
 COPY shared/ ./shared/
 
 # Set Python path so it can import from dashboard and shared

@@ -50,7 +50,8 @@ CREATE TABLE IF NOT EXISTS aggregates (
     vwap        DOUBLE PRECISION NOT NULL,
     trade_count INTEGER     NOT NULL,
     event_id    TEXT        NOT NULL,
-    window_end  TIMESTAMPTZ NOT NULL
+    window_end  TIMESTAMPTZ NOT NULL,
+    UNIQUE (time, symbol, window_sec)
 );
 
 SELECT create_hypertable(
@@ -88,6 +89,26 @@ SELECT create_hypertable(
 -- Common dashboard queries: recent alerts per symbol, or all high-severity alerts
 CREATE INDEX IF NOT EXISTS ix_alerts_symbol_time ON alerts (symbol, time DESC);
 CREATE INDEX IF NOT EXISTS ix_alerts_severity_time ON alerts (severity, time DESC);
+
+-- ============================================================================
+-- 4. Moving Averages Table
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS moving_averages (
+    time            TIMESTAMPTZ NOT NULL,
+    symbol          TEXT        NOT NULL,
+    window_sec      INTEGER     NOT NULL,
+    ma_type         TEXT        NOT NULL,   -- 'SMA' or 'EMA'
+    ma_value        DOUBLE PRECISION NOT NULL,
+    event_id        TEXT        NOT NULL
+);
+
+SELECT create_hypertable(
+    'moving_averages',
+    by_range('time'),
+    if_not_exists => TRUE
+);
+
+CREATE INDEX IF NOT EXISTS ix_ma_symbol_time ON moving_averages (symbol, time DESC);
 
 -- ============================================================================
 -- Permissions (assuming the default postgres user for development)

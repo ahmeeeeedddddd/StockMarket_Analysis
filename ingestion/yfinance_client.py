@@ -22,8 +22,11 @@ class YFinanceClient:
 
     def run_forever(self) -> None:
         """Main polling loop. Blocks until stop() is called."""
-        logger.info("YFinanceClient starting with polling interval %.1fs", YFINANCE_POLL_INTERVAL)
+        logger.info("YFinanceClient starting with automatic 1-hour backfill...")
         self._running = True
+        
+        # 1. Perform initial backfill
+        self._backfill()
 
         while self._running:
             self._poll_all()
@@ -37,6 +40,42 @@ class YFinanceClient:
     def stop(self) -> None:
         """Signal the polling loop to exit gracefully."""
         self._running = False
+
+    def _backfill(self) -> None:
+        """Fetch last 60 1-minute bars to pre-populate charts."""
+        for symbol in TRACKED_SYMBOLS:
+            if not self._running: break
+            try:
+                logger.info("Backfilling 1h history for %s...", symbol)
+                df = yf.download(
+                    tickers=symbol,
+                    period="1d",
+                    interval="1m",
+                    progress=False,
+                    auto_adjust=True,
+                )
+                if df.empty: continue
+                
+                # Take last 60 bars
+                recent_bars = df.tail(60)
+                for ts, row in recent_bars.iterrows():
+                    price = float(row['Close'])
+                    volume = int(row['Volume'])
+                    if price > 0:
+                        # Convert pandas timestamp to unix seconds
+                        unix_ts = ts.timestamp()
+                        event = TickEvent(
+                            event_id=str(uuid.uuid4()),
+                            timestamp=unix_ts,
+                            symbol=symbol,
+                            price=price,
+                            volume=volume,
+                            source="yfinance-backfill",
+                        )
+                        self._on_tick(event)
+            except Exception as e:
+                logger.error("Backfill failed for %s: %s", symbol, e)
+        logger.info("Backfill complete.")
 
     def _poll_all(self) -> None:
         """Fetch latest bar for all tracked symbols and emit ticks."""
@@ -59,8 +98,18 @@ class YFinanceClient:
                 # Take the most recent completed bar
                 latest = df.iloc[-1]
 
-                price  = float(latest["Close"].iloc[0] if hasattr(latest["Close"], "iloc") else latest["Close"])
-                volume = int(latest["Volume"].iloc[0]  if hasattr(latest["Volume"], "iloc") else latest["Volume"])
+                # Handle case where yfinance returns a MultiIndex or Series
+                def get_val(col_name):
+                    try:
+                        val = latest[col_name]
+                        if hasattr(val, "iloc"):
+                            return float(val.iloc[0])
+                        return float(val)
+                    except (KeyError, IndexError, TypeError):
+                        return 0.0
+
+                price = get_val("Close")
+                volume = int(get_val("Volume"))
 
                 if price > 0:
                     event = TickEvent(
